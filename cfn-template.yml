@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: React serverless SPA
+Resources:
+  ApiGateway:
+    Properties:
+      CodeUri: s3://royren-lms-artifacts/a53d6f779f5972e3d70bfb477e7f5cb2
+      Events:
+        ProxyApi:
+          Properties:
+            Method: ANY
+            Path: /{proxy+}
+          Type: Api
+      Handler: server/lambda.handler
+      Role:
+        Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/${LambdaExecutionRole}
+      Runtime: nodejs6.10
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  LambdaExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument: "{\n  \"Statement\": [\n    {\n      \"Effect\": \"\
+        Allow\",\n      \"Principal\": {\n        \"Service\": [\n          \"lambda.amazonaws.com\"\
+        \n        ]\n      },\n      \"Action\": [\n        \"sts:AssumeRole\"\n \
+        \     ]\n    }\n  ]\n}"
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - lambda:InvokeAsync
+            - lambda:InvokeFunction
+            - cloudformation:DescribeStacks
+            - codepipeline:*
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource: '*'
+        PolicyName: InvokeLambda
+    Type: AWS::IAM::Role
+Transform: AWS::Serverless-2016-10-31
